@@ -8,7 +8,9 @@ from pathlib import Path
 # Ensure src/ is on the path when run from project root
 sys.path.insert(0, str(Path(__file__).parent))
 
-from fastapi import FastAPI
+import os
+
+from fastapi import Depends, FastAPI, HTTPException, Header
 from fastapi.responses import Response
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from pydantic import BaseModel
@@ -16,7 +18,35 @@ from pydantic import BaseModel
 from rag_chain import RAGChain
 
 app = FastAPI(title="RAG Observability Service")
-rag = RAGChain(config_name="default")
+
+METRICS_CONFIG_NAME = os.getenv("METRICS_CONFIG_NAME", "default")
+METRICS_API_KEY = os.getenv("METRICS_API_KEY")  # if unset, /query is left open (dev mode)
+
+# Lazy-loaded so a fresh deploy (no index built yet for METRICS_CONFIG_NAME)
+# doesn't crash the whole container at import time. Built on first request.
+_rag = None
+_rag_error = None
+
+
+def get_rag():
+    global _rag, _rag_error
+    if _rag is None and _rag_error is None:
+        try:
+            _rag = RAGChain(config_name=METRICS_CONFIG_NAME)
+        except FileNotFoundError as e:
+            _rag_error = (
+                f"No knowledge base found for config '{METRICS_CONFIG_NAME}' ({e}). "
+                f"Index documents via the app or `python src/ingest.py "
+                f"--config-name {METRICS_CONFIG_NAME}` first."
+            )
+    if _rag_error:
+        raise HTTPException(status_code=503, detail=_rag_error)
+    return _rag
+
+
+def check_api_key(x_api_key: str = Header(default=None)):
+    if METRICS_API_KEY and x_api_key != METRICS_API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid or missing X-API-Key")
 
 REQUEST_COUNT = Counter("rag_requests_total", "Total RAG queries served")
 RETRIEVAL_LATENCY = Histogram("rag_retrieval_latency_ms", "Retrieval stage latency (ms)")
@@ -39,8 +69,9 @@ class QueryResponse(BaseModel):
     is_grounded: bool
 
 
-@app.post("/query", response_model=QueryResponse)
+@app.post("/query", response_model=QueryResponse, dependencies=[Depends(check_api_key)])
 def query(req: QueryRequest):
+    rag = get_rag()
     resp = rag.query(req.question)
     contexts = [d["text"] for d in resp.retrieved_docs]
 

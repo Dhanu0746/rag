@@ -268,11 +268,23 @@ def main():
     parser.add_argument(
         "--config-name",
         default="default",
+        help="Also used as the username / data subfolder (data/<config-name>/), "
+             "matching how the Streamlit app names indexes.",
     )
 
     args = parser.parse_args()
 
-    documents = load_documents()
+    # config_name doubles as the username so that a CLI ingest run lands in the
+    # same storage/bm25_<name>.pkl + Chroma collection the app looks for.
+    documents = load_documents(args.config_name)
+
+    if not documents:
+        print(
+            f"\n[ERROR] No documents found in data/{args.config_name}/.\n"
+            f"  Add .pdf, .md, .txt, or .docx files there first, "
+            f"or upload via the Streamlit app's Document Manager.\n"
+        )
+        return
 
     nodes = chunk_documents(
         documents,

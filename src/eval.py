@@ -95,6 +95,7 @@ def main():
     rows, latencies, grounded_scores = run_pipeline_over_dataset(rag, golden)
 
     # Calculate baseline metrics across configurations
+    is_heuristic = True
     if os.getenv("OPENAI_API_KEY"):
         try:
             from datasets import Dataset
@@ -111,10 +112,16 @@ def main():
             ar_score = round(scores["answer_relevancy"], 4)
             cp_score = round(scores["context_precision"], 4)
             cr_score = round(scores["context_recall"], 4)
+            is_heuristic = False
         except Exception as e:
-            print(f"RAGAS fallback mode ({e})")
+            print(f"[WARN] RAGAS judge failed, falling back to heuristic scoring ({e})")
             f_score, ar_score, cp_score, cr_score = None, None, None, None
     else:
+        print(
+            "[WARN] OPENAI_API_KEY not set — RAGAS needs an LLM judge, so this run will use "
+            "HEURISTIC (simulated) scores, not real faithfulness/relevancy/precision/recall. "
+            "Set OPENAI_API_KEY to get real RAGAS-judged numbers."
+        )
         f_score, ar_score, cp_score, cr_score = None, None, None, None
 
     if f_score is None:
