@@ -1,0 +1,39 @@
+# Core RAG frameworks
+llama-index-core
+llama-index-embeddings-huggingface
+llama-index-vector-stores-chroma
+langchain==0.3.7
+langchain-community==0.3.7
+langchain-ollama==0.2.0
+langchain-core==0.3.19
+
+# Vector store + sparse retrieval
+chromadb==0.5.20
+rank-bm25==0.2.2
+
+# Embeddings + reranking (local, free)
+sentence-transformers==3.3.1
+
+# Evaluation
+ragas==0.2.6
+datasets==3.1.0
+
+# Observability
+langsmith==0.1.147
+prometheus-client==0.21.0
+
+# Cloud LLM Support
+langchain-groq>=0.2.0
+langchain-openai>=0.2.0
+
+# Dashboard
+streamlit==1.40.1
+pandas==2.2.3
+plotly==5.24.1
+
+# Utilities
+python-dotenv==1.0.1
+
+passlib[bcrypt]
+python-jose[cryptography]
+sqlalchemy

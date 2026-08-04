@@ -1,0 +1,25 @@
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+
+# Usage:
+#   1. cd monitoring && docker compose up -d
+#   2. Run the metrics service: uvicorn src.metrics_exporter:app --port 8000
+#   3. Open Grafana at http://localhost:3000 (admin/admin), add Prometheus
+#      (http://prometheus:9090) as a data source, and build panels for
+#      rag_total_latency_ms, rag_requests_total, rag_context_chunks.
