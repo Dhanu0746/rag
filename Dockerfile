@@ -30,7 +30,7 @@ EXPOSE 8501 8000 8502
 
 # Healthcheck for the main Streamlit app
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-    CMD curl -f http://localhost:8501/_stcore/health || exit 1
+    CMD sh -c "curl -f http://localhost:${PORT:-8501}/_stcore/health || exit 1"
 
 # Default command runs Streamlit Chat Application
-CMD ["streamlit", "run", "chat_app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+CMD sh -c "streamlit run chat_app.py --server.address=0.0.0.0 --server.port=${PORT:-8501}"
