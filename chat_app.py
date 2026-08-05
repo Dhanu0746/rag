@@ -122,7 +122,7 @@ with st.sidebar:
         index=0,
     )
 
-    use_reranker = st.toggle("Enable Reranker (Cross-Encoder)", value=True)
+    use_reranker = st.toggle("Enable Reranker (Cross-Encoder)", value=False)
     use_query_expansion = st.toggle("Enable Multi-Query Expansion", value=False)
     top_k = st.slider("Top-K Sources", min_value=1, max_value=10, value=5)
 

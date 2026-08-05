@@ -27,7 +27,7 @@ class RAGChain:
         config_name="default",
         model="gemma3:1b",
         retrieval_mode="hybrid",
-        use_reranker=True,
+        use_reranker=False,
         use_query_expansion=False,
         top_k=5,
     ):
